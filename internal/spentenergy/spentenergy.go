@@ -1,6 +1,7 @@
 package spentenergy
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -12,18 +13,60 @@ const (
 	walkingCaloriesCoefficient = 0.5  // коэффициент для расчета калорий при ходьбе.
 )
 
-func WalkingSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	// TODO: реализовать функцию
-}
-
-func RunningSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	// TODO: реализовать функцию
+func Distance(steps int, height float64) float64 {
+	stepLength := height * stepLengthCoefficient
+	distanceMeters := float64(steps) * stepLength
+	return distanceMeters / mInKm
 }
 
 func MeanSpeed(steps int, height float64, duration time.Duration) float64 {
-	// TODO: реализовать функцию
+	if duration <= 0 {
+		return 0
+	}
+	if steps < 0 {
+		return 0
+	}
+	distance := Distance(steps, height)
+	return distance / duration.Hours()
 }
 
-func Distance(steps int, height float64) float64 {
-	// TODO: реализовать функцию
+func RunningSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
+	if err := validateCaloriesParams(steps, weight, height, duration); err != nil {
+		return 0, err
+	}
+
+	meanSpeed := MeanSpeed(steps, height, duration)
+	durationInMinutes := duration.Minutes()
+
+	calories := (weight * meanSpeed * durationInMinutes) / minInH
+	return calories, nil
+}
+
+func WalkingSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
+	if err := validateCaloriesParams(steps, weight, height, duration); err != nil {
+		return 0, err
+	}
+
+	meanSpeed := MeanSpeed(steps, height, duration)
+	durationInMinutes := duration.Minutes()
+
+	calories := (weight * meanSpeed * durationInMinutes) / minInH
+	calories *= walkingCaloriesCoefficient
+
+	return calories, nil
+}
+
+func validateCaloriesParams(steps int, weight, height float64, duration time.Duration) error {
+	switch {
+	case steps <= 0:
+		return fmt.Errorf("количество шагов должно быть положительным")
+	case weight <= 0:
+		return fmt.Errorf("вес должен быть положительным")
+	case height <= 0:
+		return fmt.Errorf("рост должен быть положительным")
+	case duration <= 0:
+		return fmt.Errorf("длительность должна быть положительной")
+	default:
+		return nil
+	}
 }
