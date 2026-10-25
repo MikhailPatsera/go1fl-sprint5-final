@@ -14,7 +14,7 @@ type Training struct {
 	Steps        int
 	TrainingType string
 	Duration     time.Duration
-	personaldata.Personal // Анонимное встраивание
+	personaldata.Personal
 }
 
 func (t *Training) Parse(datastring string) (err error) {
@@ -27,10 +27,18 @@ func (t *Training) Parse(datastring string) (err error) {
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга количества шагов: %w", err)
 	}
+	// Валидация шагов
+	if steps <= 0 {
+		return fmt.Errorf("количество шагов должно быть положительным")
+	}
 
 	duration, err := time.ParseDuration(parts[2])
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга длительности: %w", err)
+	}
+	// Валидация продолжительности
+	if duration <= 0 {
+		return fmt.Errorf("длительность должна быть положительной")
 	}
 
 	t.Steps = steps
@@ -60,8 +68,9 @@ func (t Training) ActionInfo() (string, error) {
 		return "", err
 	}
 
+	// Добавлен \n в конце строки
 	info := fmt.Sprintf(
-		"Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f",
+		"Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f\n",
 		t.TrainingType,
 		t.Duration.Hours(),
 		distance,
